@@ -52,6 +52,23 @@ def test_apply_fingerprint_rewrites_kyber_supported_group_alias():
     assert curl.options[CurlOpt.SSL_EC_CURVES] == "X25519Kyber768Draft00:P-256"
 
 
+def test_apply_fingerprint_with_tls_extension_order_respects_cert_compression():
+    curl = FakeCurl()
+    fingerprint = Fingerprint(
+        tls_extension_order="0-23-65281-10-11-16-5-13-18-51-45-43-27",
+        tls_cert_compression=["zlib"],
+    )
+
+    _apply_fingerprint(
+        curl,
+        fingerprint,
+        existing_header_names=set(),
+        default_headers=False,
+    )
+
+    assert curl.options[CurlOpt.SSL_CERT_COMPRESSION] == "zlib"
+
+
 def test_apply_fingerprint_empty_host_uses_curl_generated_host():
     curl = FakeCurl()
     fingerprint = Fingerprint(
