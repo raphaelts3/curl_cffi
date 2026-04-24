@@ -445,6 +445,12 @@ def _apply_fingerprint(
     if fingerprint.tls_ciphers:
         curl.setopt(CurlOpt.SSL_CIPHER_LIST, ":".join(fingerprint.tls_ciphers))
 
+    if fingerprint.tls_extension_order:
+        tls_extension_order = _strip_padding_extension(fingerprint.tls_extension_order)
+        extension_ids = set(int(e) for e in tls_extension_order.split("-"))
+        toggle_extensions_by_ids(curl, extension_ids)
+        curl.setopt(CurlOpt.TLS_EXTENSION_ORDER, tls_extension_order)
+
     curl.setopt(CurlOpt.SSL_ENABLE_ALPN, int(fingerprint.tls_alpn))
     curl.setopt(CurlOpt.SSL_ENABLE_ALPS, int(fingerprint.tls_alps))
     curl.setopt(CurlOpt.SSL_ENABLE_TICKET, int(fingerprint.tls_session_ticket))
@@ -478,12 +484,6 @@ def _apply_fingerprint(
             for group in fingerprint.tls_supported_groups
         ]
         curl.setopt(CurlOpt.SSL_EC_CURVES, ":".join(normalized_groups))
-
-    if fingerprint.tls_extension_order:
-        tls_extension_order = _strip_padding_extension(fingerprint.tls_extension_order)
-        extension_ids = set(int(e) for e in tls_extension_order.split("-"))
-        toggle_extensions_by_ids(curl, extension_ids)
-        curl.setopt(CurlOpt.TLS_EXTENSION_ORDER, tls_extension_order)
 
     if fingerprint.tls_delegated_credentials:
         curl.setopt(
